@@ -1,0 +1,256 @@
+<!doctype html><html lang="zh-CN"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>creator-analytics · 自媒体数据复盘报告页生成器</title>
+<meta name="description" content="creator-analytics 是一个 Claude Code / Agent 技能:多平台自媒体后台数据 → 一张自包含、可公开展示的 PPVI 浅色 HTML 报告页,核心结论卡 → 热力总表 → 专题散点/条形 → 迭代建议面板 → 执行 Checklist,纯静态、零 JS 库、浏览器直开。">
+<link rel="canonical" href="https://xntj-ai.github.io/creator-analytics/index.zh.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://xntj-ai.github.io/creator-analytics/index.zh.html">
+<link rel="alternate" hreflang="en" href="https://xntj-ai.github.io/creator-analytics/">
+<link rel="alternate" hreflang="x-default" href="https://xntj-ai.github.io/creator-analytics/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="creator-analytics · 自媒体数据复盘报告页生成器">
+<meta property="og:description" content="多平台自媒体后台数据 → 一张可公开展示的 PPVI 浅色 HTML 报告页。Claude Code / Agent 技能。">
+<meta property="og:locale" content="zh_CN">
+<style>
+:root{
+  --bg:#FAF8F4; --surf:#FFFFFF; --line:#ECE6DC; --line2:#E2DACB;
+  --ink:#2A2722; --ink2:#6B6356; --mut:#9A9082;
+  --gold:#C8922E; --gold2:#F0B24A; --jade:#1f6f5c; --terra:#B4502E; --blue:#3E6B8C;
+  --r:16px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,system-ui,sans-serif;
+  font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;letter-spacing:.1px}
+a{color:var(--gold);text-decoration:none} a:hover{text-decoration:underline}
+.wrap{max-width:1080px;margin:0 auto;padding:30px 28px 90px}
+
+/* top bar */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding-bottom:22px;border-bottom:1px solid var(--line);margin-bottom:8px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px;font-weight:740;font-size:16px;letter-spacing:-.2px}
+.brand .tag{font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--gold);
+  background:#FAF1DF;border:1px solid #EBD9B6;padding:2px 9px;border-radius:20px;text-transform:uppercase}
+.nav{display:flex;align-items:center;gap:16px;font-size:13.5px;color:var(--ink2)}
+.nav .lang{color:var(--mut)} .nav .lang b{color:var(--ink)}
+
+/* hero */
+.kicker{font-size:12.5px;letter-spacing:2.5px;color:var(--gold);font-weight:700;text-transform:uppercase}
+h1{font-size:38px;line-height:1.18;letter-spacing:-.6px;margin:14px 0 12px;font-weight:790}
+.lead{color:var(--ink2);font-size:17px;max-width:760px;margin:0}
+.intro{color:var(--ink2);font-size:15.5px;max-width:800px;margin:18px 0 0}
+
+h2{font-size:23px;letter-spacing:-.3px;margin:62px 0 6px;font-weight:730;display:flex;align-items:center;gap:11px}
+h2 .dot{width:9px;height:9px;border-radius:50%;background:var(--gold);flex:none}
+.sub{color:var(--ink2);font-size:14.5px;margin:0 0 4px}
+.note{color:var(--mut);font-size:13px;margin-top:12px;line-height:1.6}
+b{font-weight:680}
+code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;
+  background:#F3EEE5;border:1px solid var(--line);border-radius:6px;padding:1px 6px;color:var(--terra)}
+
+/* pipeline flow */
+.flow{display:flex;align-items:stretch;gap:10px;margin-top:26px;flex-wrap:wrap}
+.fstep{flex:1;min-width:158px;background:var(--surf);border:1px solid var(--line);border-radius:var(--r);
+  padding:18px 17px;position:relative;box-shadow:0 1px 2px rgba(42,39,34,.03)}
+.fstep .fk{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);font-weight:700}
+.fstep h4{margin:8px 0 6px;font-size:15.5px;font-weight:730;letter-spacing:-.2px}
+.fstep p{margin:0;font-size:13px;color:var(--ink2);line-height:1.55}
+.fstep.fin{border-color:#E6C98A;background:linear-gradient(180deg,#FFFDF8,#FFF)}
+.fstep.fin .fk{color:var(--gold)}
+.farr{display:flex;align-items:center;color:#CDB892;font-size:22px;font-weight:400;flex:none;padding:0 2px}
+@media(max-width:720px){.farr{transform:rotate(90deg);align-self:center;padding:3px 0}.fstep{min-width:100%}.flow{flex-direction:column}}
+
+/* shapes */
+.shapes{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px}
+.shape{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:22px 18px;text-align:center;
+  box-shadow:0 1px 2px rgba(42,39,34,.03)}
+.shape svg{display:block;margin:0 auto 14px}
+.shape .sn{font-size:15px;font-weight:730} .shape .se{font-size:12.5px;color:var(--mut);letter-spacing:.5px}
+.shape p{margin:8px 0 0;font-size:13px;color:var(--ink2);line-height:1.55}
+.variants{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.vchip{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink2);
+  background:var(--surf);border:1px solid var(--line);border-radius:20px;padding:5px 12px}
+.vdot{width:10px;height:10px;border-radius:50%;flex:none}
+@media(max-width:720px){.shapes{grid-template-columns:1fr}}
+
+/* architecture */
+.arch{margin-top:24px;background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:26px 24px;
+  box-shadow:0 1px 2px rgba(42,39,34,.03)}
+.archcdn{max-width:360px;margin:0 auto;text-align:center;border:1px dashed var(--line2);border-radius:12px;
+  padding:11px 14px;font-size:13px;color:var(--ink2);background:#FBF8F2}
+.archcdn b{color:var(--ink)}
+.archpipe{width:1px;height:26px;background:var(--line2);margin:0 auto;position:relative}
+.archpipe::after{content:"▼";position:absolute;left:-6px;bottom:-4px;color:#CDB892;font-size:11px}
+.archfile{border:1.5px solid var(--gold);border-radius:14px;padding:8px 8px 14px;background:#FFFDF8;max-width:560px;margin:0 auto;position:relative}
+.archfile .ft{display:inline-block;font-size:12px;font-weight:720;color:var(--gold);background:#FFFDF8;
+  padding:0 10px;position:relative;top:-18px;left:8px;letter-spacing:.3px}
+.archrow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:-6px;padding:0 8px}
+.archbox{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:13px 14px}
+.archbox .bk{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mut);font-weight:700}
+.archbox h4{margin:5px 0 4px;font-size:14px;font-weight:720} .archbox p{margin:0;font-size:12.5px;color:var(--ink2);line-height:1.5}
+.archnote{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+.anote{font-size:12.5px;color:var(--jade);background:#E3EFE9;border:1px solid #CDE5DB;border-radius:20px;padding:4px 13px;font-weight:600}
+@media(max-width:720px){.archrow{grid-template-columns:1fr}}
+
+/* feature cards */
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:24px}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:22px 22px 20px;position:relative;overflow:hidden;box-shadow:0 1px 2px rgba(42,39,34,.03)}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--gold)}
+.card h3{margin:0 0 8px;font-size:16.5px;font-weight:730;letter-spacing:-.2px}
+.card p{margin:0;color:var(--ink2);font-size:14px}
+@media(max-width:720px){.cards{grid-template-columns:1fr}}
+
+/* two panels */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:24px;align-items:start}
+.panel{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:22px;box-shadow:0 1px 2px rgba(42,39,34,.03)}
+.panel .pk{font-size:11.5px;letter-spacing:1.5px;font-weight:700;text-transform:uppercase}
+.panel.ok .pk{color:var(--jade)} .panel.no .pk{color:var(--terra)}
+.panel h3{margin:6px 0 0;font-size:16px;font-weight:730}
+.panel ul{margin:12px 0 0;padding-left:18px;color:var(--ink2);font-size:14px} .panel li{margin:6px 0}
+@media(max-width:720px){.two{grid-template-columns:1fr}}
+
+/* quick start */
+.steps{counter-reset:s;margin-top:24px;display:grid;gap:12px}
+.step{display:grid;grid-template-columns:34px 1fr;gap:14px;align-items:start;background:var(--surf);
+  border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+.step::before{counter-increment:s;content:counter(s);width:28px;height:28px;border-radius:50%;
+  background:#FAF1DF;border:1px solid #EBD9B6;color:var(--gold);font-weight:760;font-size:14px;
+  display:flex;align-items:center;justify-content:center}
+.step>div{min-width:0} .step h4{margin:2px 0 4px;font-size:15px;font-weight:720} .step p{margin:0;font-size:13.5px;color:var(--ink2)}
+pre{background:#2A2722;color:#F3EEE5;border-radius:10px;padding:13px 15px;overflow-x:auto;font-size:12.5px;
+  font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;line-height:1.6;margin:8px 0 0}
+
+footer{margin-top:74px;color:var(--mut);font-size:12.5px;border-top:1px solid var(--line);padding-top:22px;
+  display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+footer a{color:var(--ink2)}
+</style></head><body><div class="wrap">
+
+<div class="topbar">
+  <div class="brand">creator-analytics <span class="tag">Claude Code 技能</span></div>
+  <div class="nav">
+    <span class="lang"><b>中文</b> · <a href="./index.html">English</a></span>
+    <a href="https://github.com/xntj-ai/creator-analytics">GitHub ↗</a>
+  </div>
+</div>
+
+<div class="kicker">数据复盘 · 静态 HTML 报告页</div>
+<h1>把多平台数据复盘,<br>落成一张可展示的报告页</h1>
+<p class="lead">creator-analytics 是一个 Claude Code / Agent 技能。数据算完之后,它产出一张<b>自包含的静态 <code>.html</code> 报告页</b>:PPVI 浅色风格,核心结论卡先行、热力总表、专题散点/条形、分平台迭代建议、可勾掉的执行 Checklist —— 纯 Python 标准库生成,图表内联 SVG,零 JS 库,浏览器直接打开。</p>
+<p class="intro">复盘真正难的不是把页面画出来 —— 是让<b>洞察</b>别在呈现层掉价,有纪律的步骤别被跳过。多数分析最后只剩一墙对话和几张零散截图,判断和下一步会话一结束就蒸发。creator-analytics 的产物是一个可复审的成品:开篇就给判断、量级列按对数刻度上色(一个爆款不洗白整列)、异常如实标注,最后是一份你真能勾掉的清单。</p>
+
+<h2><span class="dot"></span>工作流程</h2>
+<p class="sub">从各平台后台导出,到一张报告页,中间只有四步。</p>
+<div class="flow">
+  <div class="fstep"><div class="fk">导出</div><h4>平台数据导出</h4><p>视频号 / 小红书 / 抖音 / B站 / YouTube 各平台后台导出明细(csv / xlsx)。</p></div>
+  <div class="farr">→</div>
+  <div class="fstep"><div class="fk">解析对齐</div><h4>对齐成一份 JSON</h4><p>一期内容一个实体,按平台分组指标,解析成 <code>_&lt;topic&gt;_data.json</code> —— 数字唯一来源。</p></div>
+  <div class="farr">→</div>
+  <div class="fstep"><div class="fk">分析</div><h4>按 playbook 挖结论</h4><p>量级与率分开读、漏斗定位、对照组坐实因果、相关性现算 —— 结论先行。</p></div>
+  <div class="farr">→</div>
+  <div class="fstep fin"><div class="fk">产出</div><h4>静态 HTML 报告页</h4><p>结论卡 + 热力总表 + 专题图 + 迭代面板 + Checklist,浏览器直接打开。</p></div>
+</div>
+<p class="note">数字单一来源 —— 生成脚本只读解析后的 JSON 算数,不手填任何数字;footer 注明「由脚本从原始导出解析,未经人工转录」。</p>
+
+<h2><span class="dot"></span>报告页结构</h2>
+<p class="sub">页面按固定顺序组装,没有对应数据的区块可删;结论卡与 footer 口径声明任何时候都保留。</p>
+<div class="shapes">
+  <div class="shape">
+    <svg width="148" height="84" viewBox="0 0 148 84">
+      <rect x="6" y="8" width="136" height="68" rx="11" fill="#fff" stroke="#1f6f5c" stroke-width="1.6"/>
+      <rect x="18" y="18" width="46" height="7" rx="3.5" fill="#1f6f5c" fill-opacity="0.85"/>
+      <rect x="18" y="33" width="112" height="6" rx="3" fill="#C8922E" fill-opacity="0.35"/>
+      <rect x="18" y="45" width="112" height="6" rx="3" fill="#C8922E" fill-opacity="0.35"/>
+      <rect x="18" y="57" width="78" height="6" rx="3" fill="#C8922E" fill-opacity="0.35"/>
+      <rect x="6" y="8" width="4" height="68" rx="2" fill="#C8922E"/>
+    </svg>
+    <div class="sn">核心结论卡 <span class="se">cards</span></div>
+    <p>开篇先给判断。4–6 张,gold 中性 / jade 坐实 / terra 校正。</p>
+  </div>
+  <div class="shape">
+    <svg width="148" height="84" viewBox="0 0 148 84">
+      <rect x="6" y="8" width="136" height="68" rx="11" fill="#fff" stroke="#C8922E" stroke-width="1.6"/>
+      <rect x="14" y="16" width="34" height="52" rx="4" fill="#F3EEE5"/>
+      <rect x="52" y="16" width="20" height="24" fill="#C8922E" fill-opacity="0.62"/>
+      <rect x="74" y="16" width="20" height="24" fill="#C8922E" fill-opacity="0.20"/>
+      <rect x="96" y="16" width="20" height="24" fill="#C8922E" fill-opacity="0.44"/>
+      <rect x="118" y="16" width="18" height="24" fill="#C8922E" fill-opacity="0.12"/>
+      <rect x="52" y="42" width="20" height="24" fill="#C8922E" fill-opacity="0.14"/>
+      <rect x="74" y="42" width="20" height="24" fill="#C8922E" fill-opacity="0.55"/>
+      <rect x="96" y="42" width="20" height="24" fill="#C8922E" fill-opacity="0.30"/>
+      <rect x="118" y="42" width="18" height="24" fill="#B4502E" fill-opacity="0.45"/>
+    </svg>
+    <div class="sn">热力总表 <span class="se">heat table</span></div>
+    <p>多实体 × 多指标。列内对数刻度上色,异常打徽标。</p>
+  </div>
+  <div class="shape">
+    <svg width="148" height="84" viewBox="0 0 148 84">
+      <rect x="6" y="8" width="136" height="68" rx="11" fill="#fff" stroke="#3E6B8C" stroke-width="1.6"/>
+      <line x1="20" y1="66" x2="132" y2="66" stroke="#ECE6DC" stroke-width="1"/>
+      <line x1="20" y1="16" x2="20" y2="66" stroke="#ECE6DC" stroke-width="1"/>
+      <line x1="20" y1="40" x2="132" y2="40" stroke="#B4502E" stroke-width="1" stroke-dasharray="4 4"/>
+      <circle cx="38" cy="54" r="4" fill="#C8922E" fill-opacity="0.85"/>
+      <circle cx="58" cy="48" r="4" fill="#C8922E" fill-opacity="0.85"/>
+      <circle cx="74" cy="33" r="4" fill="#C8922E" fill-opacity="0.85"/>
+      <circle cx="96" cy="50" r="4" fill="#C8922E" fill-opacity="0.85"/>
+      <circle cx="112" cy="26" r="6" fill="#B4502E" fill-opacity="0.9"/>
+      <circle cx="124" cy="58" r="4" fill="#C8922E" fill-opacity="0.85"/>
+    </svg>
+    <div class="sn">专题散点 / 条形 <span class="se">charts</span></div>
+    <p>两指标关系 + 阈值参考线,内联 SVG。异常点放大标 terra。</p>
+  </div>
+</div>
+<div class="variants">
+  <span class="vchip"><span class="vdot" style="background:#C8922E"></span>gold · 中性强调</span>
+  <span class="vchip"><span class="vdot" style="background:#1f6f5c"></span>jade · 正面 / 坐实</span>
+  <span class="vchip"><span class="vdot" style="background:#B4502E"></span>terra · 警示 / 校正 / P0</span>
+  <span class="vchip"><span class="vdot" style="background:#9A9082"></span>grey · 待核实(不臆断)</span>
+</div>
+
+<h2><span class="dot"></span>下半页 · 迭代建议 + 执行 Checklist</h2>
+<p class="sub">报告不止于诊断 —— 结论之后是分平台的动作面板,和一份可逐条勾掉的落地清单。</p>
+<div class="arch">
+  <div class="archcdn"><b>分平台迭代面板</b><br>每平台一句话定位 + 多维建议,P0 标红</div>
+  <div class="archpipe"></div>
+  <div class="archfile">
+    <span class="ft">报告页下半部分</span>
+    <div class="archrow">
+      <div class="archbox"><div class="bk">建议</div><h4>迭代面板</h4><p>分平台多维动作,⚑ 维度渲染成 P0 红标,每周期重新调研。</p></div>
+      <div class="archbox"><div class="bk">落地</div><h4>执行 Checklist</h4><p>动词开头、可观测完成态的清单,P0 优先,能逐条勾掉。</p></div>
+    </div>
+  </div>
+  <div class="archnote">
+    <span class="anote">结论先行</span>
+    <span class="anote">异常如实标注</span>
+    <span class="anote">footer 口径声明</span>
+  </div>
+</div>
+<p class="note">视觉为浅色 ppvi:克制灰阶基底、五级字号、玻璃磨砂卡片;<code>assets/template.html</code> 是唯一样式权威源 —— 本仓库就是这套样式的源头。</p>
+
+<h2><span class="dot"></span>核心特性</h2>
+<div class="cards">
+  <div class="card"><h3>内置洞察方法论</h3><p><code>insight-playbook.md</code> 的 0→9 分析路径:量级与率分开读、漏斗定位、对照组坐实因果、集中度检查、相关性现算、归因到可改的动作。</p></div>
+  <div class="card"><h3>可展示页面骨架</h3><p>结论卡 → 热力总表 → 专题图 → 迭代面板 → Checklist → footer 口径声明,顺序固定、按需取舍。</p></div>
+  <div class="card"><h3>组件 helper 直接抄</h3><p>热力上色、条形图、散点图、四语义徽标、迭代面板、Checklist 渲染器,生成脚本从 <code>components.md</code> 直接抄。</p></div>
+  <div class="card"><h3>纪律即护栏</h3><p>数字单一来源、无因异常标「待核实」不臆断、调研与实测分开、迭代建议每周期重新调研不沿用存量。</p></div>
+</div>
+
+<h2><span class="dot"></span>适用场景</h2>
+<div class="two">
+  <div class="panel ok"><div class="pk">适合</div><h3>分析做完,要落成报告页</h3>
+    <ul><li>多平台(视频号/小红书/抖音/B站/YouTube)数据复盘</li><li>结论要可展示、可复用、有口径有动作</li><li>跨平台复盘流程的「报告页」步骤</li></ul></div>
+  <div class="panel no"><div class="pk">不适合</div><h3>不是这些事</h3>
+    <ul><li>博客文章页 / 发布文案(各走各的流程)</li><li>原始数据解析本身(上游另写脚本)</li><li>通用图表库 / 实时 BI 看板</li></ul></div>
+</div>
+
+<h2><span class="dot"></span>快速开始</h2>
+<div class="steps">
+  <div class="step"><div><h4>装进 Claude Code 技能目录</h4><pre>git clone https://github.com/xntj-ai/creator-analytics .claude/skills/creator-analytics</pre></div></div>
+  <div class="step"><div><h4>先把各平台导出解析成一份对齐 JSON</h4><p>一期内容一个实体,按平台分组指标 —— 这是数字的唯一来源,报告脚本只读它。</p></div></div>
+  <div class="step"><div><h4>对 Claude 说「出一张复盘报告页」</h4><p>它按 <code>SKILL.md</code> 的结构和铁律生成 <code>build_&lt;topic&gt;_html.py</code>,产出静态 HTML,浏览器直接打开。也可不经 Claude,直接复制 <code>assets/template.html</code> 填内容。</p></div></div>
+</div>
+
+<footer>
+  <span>creator-analytics · MIT License · © <a href="https://xntj.tv">张拼拼 · XNTJ</a></span>
+  <span><a href="https://github.com/xntj-ai/creator-analytics">GitHub</a> · <a href="https://github.com/xntj-ai/ppvi">ppvi 设计体系</a> · <a href="./index.html">English</a></span>
+</footer>
+
+</div></body></html>

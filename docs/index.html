@@ -1,0 +1,256 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>creator-analytics · Creator data review report-page generator</title>
+<meta name="description" content="creator-analytics is a Claude Code / Agent skill: multi-platform creator backstage data becomes one self-contained, presentable PPVI light HTML report page — finding cards, heat master table, topic scatter/bar charts, iteration panel, execution checklist. Pure static, zero JS libraries, opens in any browser.">
+<link rel="canonical" href="https://xntj-ai.github.io/creator-analytics/">
+<link rel="alternate" hreflang="en" href="https://xntj-ai.github.io/creator-analytics/">
+<link rel="alternate" hreflang="zh-Hans" href="https://xntj-ai.github.io/creator-analytics/index.zh.html">
+<link rel="alternate" hreflang="x-default" href="https://xntj-ai.github.io/creator-analytics/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="creator-analytics · Creator data review report-page generator">
+<meta property="og:description" content="Multi-platform creator backstage data → one presentable PPVI light HTML report page. A Claude Code / Agent skill.">
+<meta property="og:locale" content="en_US">
+<style>
+:root{
+  --bg:#FAF8F4; --surf:#FFFFFF; --line:#ECE6DC; --line2:#E2DACB;
+  --ink:#2A2722; --ink2:#6B6356; --mut:#9A9082;
+  --gold:#C8922E; --gold2:#F0B24A; --jade:#1f6f5c; --terra:#B4502E; --blue:#3E6B8C;
+  --r:16px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,system-ui,sans-serif;
+  font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;letter-spacing:.1px}
+a{color:var(--gold);text-decoration:none} a:hover{text-decoration:underline}
+.wrap{max-width:1080px;margin:0 auto;padding:30px 28px 90px}
+
+/* top bar */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding-bottom:22px;border-bottom:1px solid var(--line);margin-bottom:8px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px;font-weight:740;font-size:16px;letter-spacing:-.2px}
+.brand .tag{font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--gold);
+  background:#FAF1DF;border:1px solid #EBD9B6;padding:2px 9px;border-radius:20px;text-transform:uppercase}
+.nav{display:flex;align-items:center;gap:16px;font-size:13.5px;color:var(--ink2)}
+.nav .lang{color:var(--mut)} .nav .lang b{color:var(--ink)}
+
+/* hero */
+.kicker{font-size:12.5px;letter-spacing:2.5px;color:var(--gold);font-weight:700;text-transform:uppercase}
+h1{font-size:38px;line-height:1.18;letter-spacing:-.6px;margin:14px 0 12px;font-weight:790}
+.lead{color:var(--ink2);font-size:17px;max-width:760px;margin:0}
+.intro{color:var(--ink2);font-size:15.5px;max-width:800px;margin:18px 0 0}
+
+h2{font-size:23px;letter-spacing:-.3px;margin:62px 0 6px;font-weight:730;display:flex;align-items:center;gap:11px}
+h2 .dot{width:9px;height:9px;border-radius:50%;background:var(--gold);flex:none}
+.sub{color:var(--ink2);font-size:14.5px;margin:0 0 4px}
+.note{color:var(--mut);font-size:13px;margin-top:12px;line-height:1.6}
+b{font-weight:680}
+code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;
+  background:#F3EEE5;border:1px solid var(--line);border-radius:6px;padding:1px 6px;color:var(--terra)}
+
+/* pipeline flow */
+.flow{display:flex;align-items:stretch;gap:10px;margin-top:26px;flex-wrap:wrap}
+.fstep{flex:1;min-width:158px;background:var(--surf);border:1px solid var(--line);border-radius:var(--r);
+  padding:18px 17px;position:relative;box-shadow:0 1px 2px rgba(42,39,34,.03)}
+.fstep .fk{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);font-weight:700}
+.fstep h4{margin:8px 0 6px;font-size:15.5px;font-weight:730;letter-spacing:-.2px}
+.fstep p{margin:0;font-size:13px;color:var(--ink2);line-height:1.55}
+.fstep.fin{border-color:#E6C98A;background:linear-gradient(180deg,#FFFDF8,#FFF)}
+.fstep.fin .fk{color:var(--gold)}
+.farr{display:flex;align-items:center;color:#CDB892;font-size:22px;font-weight:400;flex:none;padding:0 2px}
+@media(max-width:720px){.farr{transform:rotate(90deg);align-self:center;padding:3px 0}.fstep{min-width:100%}.flow{flex-direction:column}}
+
+/* shapes */
+.shapes{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px}
+.shape{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:22px 18px;text-align:center;
+  box-shadow:0 1px 2px rgba(42,39,34,.03)}
+.shape svg{display:block;margin:0 auto 14px}
+.shape .sn{font-size:15px;font-weight:730} .shape .se{font-size:12.5px;color:var(--mut);letter-spacing:.5px}
+.shape p{margin:8px 0 0;font-size:13px;color:var(--ink2);line-height:1.55}
+.variants{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.vchip{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink2);
+  background:var(--surf);border:1px solid var(--line);border-radius:20px;padding:5px 12px}
+.vdot{width:10px;height:10px;border-radius:50%;flex:none}
+@media(max-width:720px){.shapes{grid-template-columns:1fr}}
+
+/* architecture */
+.arch{margin-top:24px;background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:26px 24px;
+  box-shadow:0 1px 2px rgba(42,39,34,.03)}
+.archcdn{max-width:360px;margin:0 auto;text-align:center;border:1px dashed var(--line2);border-radius:12px;
+  padding:11px 14px;font-size:13px;color:var(--ink2);background:#FBF8F2}
+.archcdn b{color:var(--ink)}
+.archpipe{width:1px;height:26px;background:var(--line2);margin:0 auto;position:relative}
+.archpipe::after{content:"▼";position:absolute;left:-6px;bottom:-4px;color:#CDB892;font-size:11px}
+.archfile{border:1.5px solid var(--gold);border-radius:14px;padding:8px 8px 14px;background:#FFFDF8;max-width:560px;margin:0 auto;position:relative}
+.archfile .ft{display:inline-block;font-size:12px;font-weight:720;color:var(--gold);background:#FFFDF8;
+  padding:0 10px;position:relative;top:-18px;left:8px;letter-spacing:.3px}
+.archrow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:-6px;padding:0 8px}
+.archbox{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:13px 14px}
+.archbox .bk{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mut);font-weight:700}
+.archbox h4{margin:5px 0 4px;font-size:14px;font-weight:720} .archbox p{margin:0;font-size:12.5px;color:var(--ink2);line-height:1.5}
+.archnote{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+.anote{font-size:12.5px;color:var(--jade);background:#E3EFE9;border:1px solid #CDE5DB;border-radius:20px;padding:4px 13px;font-weight:600}
+@media(max-width:720px){.archrow{grid-template-columns:1fr}}
+
+/* feature cards */
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:24px}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:22px 22px 20px;position:relative;overflow:hidden;box-shadow:0 1px 2px rgba(42,39,34,.03)}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--gold)}
+.card h3{margin:0 0 8px;font-size:16.5px;font-weight:730;letter-spacing:-.2px}
+.card p{margin:0;color:var(--ink2);font-size:14px}
+@media(max-width:720px){.cards{grid-template-columns:1fr}}
+
+/* two panels */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:24px;align-items:start}
+.panel{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:22px;box-shadow:0 1px 2px rgba(42,39,34,.03)}
+.panel .pk{font-size:11.5px;letter-spacing:1.5px;font-weight:700;text-transform:uppercase}
+.panel.ok .pk{color:var(--jade)} .panel.no .pk{color:var(--terra)}
+.panel h3{margin:6px 0 0;font-size:16px;font-weight:730}
+.panel ul{margin:12px 0 0;padding-left:18px;color:var(--ink2);font-size:14px} .panel li{margin:6px 0}
+@media(max-width:720px){.two{grid-template-columns:1fr}}
+
+/* quick start */
+.steps{counter-reset:s;margin-top:24px;display:grid;gap:12px}
+.step{display:grid;grid-template-columns:34px 1fr;gap:14px;align-items:start;background:var(--surf);
+  border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+.step::before{counter-increment:s;content:counter(s);width:28px;height:28px;border-radius:50%;
+  background:#FAF1DF;border:1px solid #EBD9B6;color:var(--gold);font-weight:760;font-size:14px;
+  display:flex;align-items:center;justify-content:center}
+.step>div{min-width:0} .step h4{margin:2px 0 4px;font-size:15px;font-weight:720} .step p{margin:0;font-size:13.5px;color:var(--ink2)}
+pre{background:#2A2722;color:#F3EEE5;border-radius:10px;padding:13px 15px;overflow-x:auto;font-size:12.5px;
+  font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;line-height:1.6;margin:8px 0 0}
+
+footer{margin-top:74px;color:var(--mut);font-size:12.5px;border-top:1px solid var(--line);padding-top:22px;
+  display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+footer a{color:var(--ink2)}
+</style></head><body><div class="wrap">
+
+<div class="topbar">
+  <div class="brand">creator-analytics <span class="tag">Claude Code Skill</span></div>
+  <div class="nav">
+    <span class="lang"><b>English</b> · <a href="./index.zh.html">中文</a></span>
+    <a href="https://github.com/xntj-ai/creator-analytics">GitHub ↗</a>
+  </div>
+</div>
+
+<div class="kicker">Data review · Static-HTML report page</div>
+<h1>Turn a multi-platform review<br>into a presentable report page</h1>
+<p class="lead">creator-analytics is a Claude Code / Agent skill. Once the numbers are crunched, it produces a <b>self-contained static <code>.html</code> report page</b>: PPVI light styling, finding cards first, a heat master table, topic scatter / bar charts, per-platform iteration advice, and a tickable execution checklist — generated with the Python standard library, charts inline SVG, zero JS libraries, opens straight in a browser.</p>
+<p class="intro">The hard part of a review isn't drawing the page — it's keeping the <b>insight</b> from decaying at the presentation layer and the disciplined steps from being skipped. Most analyses end as a wall of chat and a few stray screenshots; the judgment and the next steps evaporate the moment the session closes. creator-analytics's output is a reviewable artifact: it leads with judgment, colors magnitude columns on a log scale (so one viral hit can't whitewash the rest), flags anomalies honestly, and ends with a checklist you can actually tick off.</p>
+
+<h2><span class="dot"></span>How it works</h2>
+<p class="sub">From each platform's backstage export to one report page in four steps.</p>
+<div class="flow">
+  <div class="fstep"><div class="fk">Export</div><h4>Platform data export</h4><p>Pull the per-item detail from each backstage — WeChat Channels / Xiaohongshu / Douyin / Bilibili / YouTube (csv / xlsx).</p></div>
+  <div class="farr">→</div>
+  <div class="fstep"><div class="fk">Parse &amp; align</div><h4>Align into one JSON</h4><p>One piece of content = one entity, metrics grouped by platform, parsed into <code>_&lt;topic&gt;_data.json</code> — the single source of numbers.</p></div>
+  <div class="farr">→</div>
+  <div class="fstep"><div class="fk">Analyze</div><h4>Mine via the playbook</h4><p>Read magnitude and rate apart, locate the funnel stage, nail causation with control groups, compute correlations — finding first.</p></div>
+  <div class="farr">→</div>
+  <div class="fstep fin"><div class="fk">Output</div><h4>Static-HTML report page</h4><p>Finding cards + heat table + topic charts + iteration panel + checklist, open in any browser.</p></div>
+</div>
+<p class="note">Single source of numbers — the generation script only reads the parsed JSON and computes, never hand-types a number; the footer states "parsed from the raw export by &lt;script&gt;, no manual transcription."</p>
+
+<h2><span class="dot"></span>Report-page anatomy</h2>
+<p class="sub">The page is assembled in a fixed order; drop any section whose data you lack — finding cards and the footer cadence statement always stay.</p>
+<div class="shapes">
+  <div class="shape">
+    <svg width="148" height="84" viewBox="0 0 148 84">
+      <rect x="6" y="8" width="136" height="68" rx="11" fill="#fff" stroke="#1f6f5c" stroke-width="1.6"/>
+      <rect x="18" y="18" width="46" height="7" rx="3.5" fill="#1f6f5c" fill-opacity="0.85"/>
+      <rect x="18" y="33" width="112" height="6" rx="3" fill="#C8922E" fill-opacity="0.35"/>
+      <rect x="18" y="45" width="112" height="6" rx="3" fill="#C8922E" fill-opacity="0.35"/>
+      <rect x="18" y="57" width="78" height="6" rx="3" fill="#C8922E" fill-opacity="0.35"/>
+      <rect x="6" y="8" width="4" height="68" rx="2" fill="#C8922E"/>
+    </svg>
+    <div class="sn">Finding cards <span class="se">cards</span></div>
+    <p>Judgment first. 4–6 cards — gold neutral / jade confirmed / terra correction.</p>
+  </div>
+  <div class="shape">
+    <svg width="148" height="84" viewBox="0 0 148 84">
+      <rect x="6" y="8" width="136" height="68" rx="11" fill="#fff" stroke="#C8922E" stroke-width="1.6"/>
+      <rect x="14" y="16" width="34" height="52" rx="4" fill="#F3EEE5"/>
+      <rect x="52" y="16" width="20" height="24" fill="#C8922E" fill-opacity="0.62"/>
+      <rect x="74" y="16" width="20" height="24" fill="#C8922E" fill-opacity="0.20"/>
+      <rect x="96" y="16" width="20" height="24" fill="#C8922E" fill-opacity="0.44"/>
+      <rect x="118" y="16" width="18" height="24" fill="#C8922E" fill-opacity="0.12"/>
+      <rect x="52" y="42" width="20" height="24" fill="#C8922E" fill-opacity="0.14"/>
+      <rect x="74" y="42" width="20" height="24" fill="#C8922E" fill-opacity="0.55"/>
+      <rect x="96" y="42" width="20" height="24" fill="#C8922E" fill-opacity="0.30"/>
+      <rect x="118" y="42" width="18" height="24" fill="#B4502E" fill-opacity="0.45"/>
+    </svg>
+    <div class="sn">Heat master table <span class="se">heat table</span></div>
+    <p>Many entities × many metrics. Per-column log-scale coloring, anomalies badged.</p>
+  </div>
+  <div class="shape">
+    <svg width="148" height="84" viewBox="0 0 148 84">
+      <rect x="6" y="8" width="136" height="68" rx="11" fill="#fff" stroke="#3E6B8C" stroke-width="1.6"/>
+      <line x1="20" y1="66" x2="132" y2="66" stroke="#ECE6DC" stroke-width="1"/>
+      <line x1="20" y1="16" x2="20" y2="66" stroke="#ECE6DC" stroke-width="1"/>
+      <line x1="20" y1="40" x2="132" y2="40" stroke="#B4502E" stroke-width="1" stroke-dasharray="4 4"/>
+      <circle cx="38" cy="54" r="4" fill="#C8922E" fill-opacity="0.85"/>
+      <circle cx="58" cy="48" r="4" fill="#C8922E" fill-opacity="0.85"/>
+      <circle cx="74" cy="33" r="4" fill="#C8922E" fill-opacity="0.85"/>
+      <circle cx="96" cy="50" r="4" fill="#C8922E" fill-opacity="0.85"/>
+      <circle cx="112" cy="26" r="6" fill="#B4502E" fill-opacity="0.9"/>
+      <circle cx="124" cy="58" r="4" fill="#C8922E" fill-opacity="0.85"/>
+    </svg>
+    <div class="sn">Topic scatter / bars <span class="se">charts</span></div>
+    <p>Two-metric relationship + threshold line, inline SVG. Anomaly points enlarged in terra.</p>
+  </div>
+</div>
+<div class="variants">
+  <span class="vchip"><span class="vdot" style="background:#C8922E"></span>gold · neutral emphasis</span>
+  <span class="vchip"><span class="vdot" style="background:#1f6f5c"></span>jade · positive / confirmed</span>
+  <span class="vchip"><span class="vdot" style="background:#B4502E"></span>terra · warning / correction / P0</span>
+  <span class="vchip"><span class="vdot" style="background:#9A9082"></span>grey · to verify (no guessing)</span>
+</div>
+
+<h2><span class="dot"></span>Lower half · Iteration advice + execution checklist</h2>
+<p class="sub">A report is more than diagnosis — after the findings come a per-platform action panel and a checklist you can tick off line by line.</p>
+<div class="arch">
+  <div class="archcdn"><b>Per-platform iteration panel</b><br>One-line role per platform + multi-dimension advice, P0 in red</div>
+  <div class="archpipe"></div>
+  <div class="archfile">
+    <span class="ft">Lower half of the report</span>
+    <div class="archrow">
+      <div class="archbox"><div class="bk">Advice</div><h4>Iteration panel</h4><p>Per-platform multi-dimension actions; ⚑ dimensions render as red P0, re-researched each cycle.</p></div>
+      <div class="archbox"><div class="bk">Land it</div><h4>Execution checklist</h4><p>Verb-first, observable-completion items, P0 first, tickable one by one.</p></div>
+    </div>
+  </div>
+  <div class="archnote">
+    <span class="anote">Judgment first</span>
+    <span class="anote">Anomalies flagged honestly</span>
+    <span class="anote">Footer cadence statement</span>
+  </div>
+</div>
+<p class="note">The look is light-mode ppvi: a restrained grayscale base, a five-level type scale, frosted-glass cards; <code>assets/template.html</code> is the single style source of truth — this repo is the origin of that style.</p>
+
+<h2><span class="dot"></span>Core features</h2>
+<div class="cards">
+  <div class="card"><h3>Insight methodology baked in</h3><p>The 0→9 analysis path in <code>insight-playbook.md</code>: read magnitude and rate apart, locate the funnel, nail causation with control groups, check concentration, compute correlations, attribute to a changeable action.</p></div>
+  <div class="card"><h3>A presentable page skeleton</h3><p>Finding cards → heat table → topic charts → iteration panel → checklist → footer cadence statement, fixed order, drop what you don't have.</p></div>
+  <div class="card"><h3>Copy-ready component helpers</h3><p>Heat coloring, bar chart, scatter plot, four-semantic badges, iteration panel, checklist renderer — the generation script copies them straight from <code>components.md</code>.</p></div>
+  <div class="card"><h3>Discipline as guardrails</h3><p>Single source of numbers, anomalies with no cause marked "to verify" not guessed, research kept apart from measured data, iteration advice re-researched each cycle.</p></div>
+</div>
+
+<h2><span class="dot"></span>When to use</h2>
+<div class="two">
+  <div class="panel ok"><div class="pk">Good fit</div><h3>Analysis done, needs a report page</h3>
+    <ul><li>Multi-platform (Channels / Xiaohongshu / Douyin / Bilibili / YouTube) data reviews</li><li>Conclusions that must be presentable, reusable, with cadence and actions</li><li>The "report-page" step of a cross-platform review</li></ul></div>
+  <div class="panel no"><div class="pk">Not for</div><h3>Not these jobs</h3>
+    <ul><li>Blog-article pages / publish copy (each has its own flow)</li><li>Raw data parsing itself (an upstream script handles that)</li><li>A generic charting library / real-time BI dashboard</li></ul></div>
+</div>
+
+<h2><span class="dot"></span>Quick start</h2>
+<div class="steps">
+  <div class="step"><div><h4>Install into your Claude Code skills directory</h4><pre>git clone https://github.com/xntj-ai/creator-analytics .claude/skills/creator-analytics</pre></div></div>
+  <div class="step"><div><h4>Parse each platform's export into one aligned JSON</h4><p>One piece of content = one entity, metrics grouped by platform — this is the single source of numbers, and the report script reads only it.</p></div></div>
+  <div class="step"><div><h4>Ask Claude to "build a review report page"</h4><p>It follows the structure and hard rules in <code>SKILL.md</code>, generates <code>build_&lt;topic&gt;_html.py</code>, and produces static HTML you open in a browser. Or skip Claude: copy <code>assets/template.html</code> and fill in the content.</p></div></div>
+</div>
+
+<footer>
+  <span>creator-analytics · MIT License · © <a href="https://xntj.tv">张拼拼 · XNTJ</a></span>
+  <span><a href="https://github.com/xntj-ai/creator-analytics">GitHub</a> · <a href="https://github.com/xntj-ai/ppvi">ppvi design system</a> · <a href="./index.zh.html">中文</a></span>
+</footer>
+
+</div></body></html>
